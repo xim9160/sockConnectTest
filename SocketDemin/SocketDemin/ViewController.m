@@ -9,7 +9,7 @@
 #import "ViewController.h"
 #import "SocketManager.h"
 
-#define REP_TIMES  30
+#define REP_TIMES  10
 
 @interface ViewController ()
 

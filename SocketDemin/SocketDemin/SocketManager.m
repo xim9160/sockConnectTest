@@ -24,8 +24,7 @@
 
 @implementation SocketManager
 
-+(instancetype)sharedInstance
-{
++ (instancetype)sharedInstance{
     static SocketManager *singleton = nil;
     static dispatch_once_t onceToken;
     // dispatch_once  无论使用多线程还是单线程，都只执行一次
@@ -59,9 +58,12 @@
         NSError *err =0;
         NSString *host = _inputAry[_index][0];
         int port = [_inputAry[_index][1] intValue];
+        CFAbsoluteTime stt = CFAbsoluteTimeGetCurrent();
+        NSString *stts = [NSString stringWithFormat:@"%.9f", stt];
+        [_connectStartTime addObject:stts];
         [socket connectToHost:host onPort:port error:&err];
         if (err) {
-            NSString *err_msg = [NSString stringWithFormat:@"%d|%@\r\n", i, err];
+            NSString *err_msg = [NSString stringWithFormat:@"id:%d|%@,no send\r\n", i, err];
             [self updateStringWith:host port:port msg:err_msg];
         }
     }
@@ -84,7 +86,7 @@
         if (self.index < [self.inputAry count]) {
             [self startOnceConnect];
         } else {
-            NSLog(@"DEBUG:END");
+            NSLog(@"id:DEBUG:END");
         }
     });
 }
@@ -111,14 +113,21 @@
 
 - (void)socket:(GCDAsyncSocket *)sock didConnectToHost:(NSString *)host port:(uint16_t)port {
     NSUInteger index = [_links indexOfObject:sock];
-    NSString *r_msg = [NSString stringWithFormat:@"%lu|%@:%d\r\n", (unsigned long)index, host, port];
+    CFAbsoluteTime dct = CFAbsoluteTimeGetCurrent();
+    double stt = [_connectStartTime[index] doubleValue];
+    double tit = dct - stt;
+    
+    NSString *r_msg = [NSString stringWithFormat:@"id:%lu|%@:%d, time:%.9f\r\n", (unsigned long)index, host, port, tit];
     [self updateStringWith:host port:port msg:r_msg];
 }
 
 - (void)socketDidDisconnect:(GCDAsyncSocket *)sock withError:(NSError *)err {
     if (err) {
         NSUInteger index = [_links indexOfObject:sock];
-        NSString *err_msg = [NSString stringWithFormat:@"%lu|%@\r\n", index, err];
+        double stt = [_connectStartTime[index] doubleValue];
+        CFAbsoluteTime dct = CFAbsoluteTimeGetCurrent();
+        double tit = dct - stt;
+        NSString *err_msg = [NSString stringWithFormat:@"id:%lu|%@, %.9f\r\n", index, err, tit];
         [self updateStringWith:nil port:0 msg:err_msg];
     }
 }
